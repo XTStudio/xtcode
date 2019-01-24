@@ -10,6 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
+		"onDebug",
 		"onCommand:extension.helloWorld"
 	],
 	"main": "./out/extension.js",
@@ -33,7 +34,9 @@
 				"program": "./out/debugger/debugAdapter.js",
 				"configurationAttributes": {
 					"launch": {
-						"required": [],
+						"required": [
+							"workspace"
+						],
 						"properties": {
 							"workspace": {
 								"type": "string",
@@ -43,7 +46,7 @@
 							"platform": {
 								"type": "string",
 								"description": "Target platform to launch.",
-								"default": "ios"
+								"default": "chrome"
 							},
 							"device": {
 								"type": "string",
@@ -58,22 +61,45 @@
 				},
 				"initialConfigurations": [
 					{
-						"type": "xt",
-						"request": "launch",
-						"name": "Run XT Debug",
-						"workspace": "${workspaceFolder}",
-						"platform": "ios"
+						"label": "XT: Debug on Chrome",
+						"body": {
+							"type": "xt",
+							"request": "launch",
+							"name": "Debug XT on Chrome",
+							"platform": "chrome",
+							"workspace": "${workspaceFolder}"
+						}
 					}
 				],
 				"configurationSnippets": [
 					{
-						"label": "XT: Launch",
+						"label": "XT: Debug on Chrome",
 						"body": {
 							"type": "xt",
 							"request": "launch",
-							"name": "Run XT Debug",
-							"workspace": "${workspaceFolder}",
-							"platform": "ios"
+							"name": "Debug XT on Chrome",
+							"platform": "chrome",
+							"workspace": "^\"\\${workspaceFolder}\""
+						}
+					},
+					{
+						"label": "XT: Debug on iOS Simulator",
+						"body": {
+							"type": "xt",
+							"request": "launch",
+							"name": "Debug XT on iOS Simulator",
+							"platform": "ios",
+							"workspace": "^\"\\${workspaceFolder}\""
+						}
+					},
+					{
+						"label": "XT: Debug on Android Emulator",
+						"body": {
+							"type": "xt",
+							"request": "launch",
+							"name": "Debug XT on Android Emulator",
+							"platform": "android",
+							"workspace": "^\"\\${workspaceFolder}\""
 						}
 					}
 				]

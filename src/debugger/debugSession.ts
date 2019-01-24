@@ -1,10 +1,10 @@
 import {
     // Logger, logger,
     LoggingDebugSession,
-    InitializedEvent, OutputEvent,
-    // , StoppedEvent, BreakpointEvent, 
-    Thread, Source, TerminatedEvent,
-    // StackFrame, Scope,  Handles, Breakpoint
+    InitializedEvent, OutputEvent, StoppedEvent, BreakpointEvent,
+    Thread, Source, TerminatedEvent, Breakpoint,
+    StackFrame,
+    // , Scope,  Handles, 
 } from 'vscode-debugadapter';
 import { DebugRuntime } from './debugRuntime';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -13,6 +13,7 @@ import { basename } from 'path';
 export class DebugSession extends LoggingDebugSession {
 
     private runtime = new DebugRuntime
+    private breakingParams: { filePath?: string, line?: number, column?: number } = {}
 
     private static THREAD_ID = 1;
 
@@ -20,6 +21,14 @@ export class DebugSession extends LoggingDebugSession {
         super()
         this.setDebuggerLinesStartAt1(true)
         this.setDebuggerColumnsStartAt1(true)
+        this.runtime.on('break', (filePath, line, column) => {
+            this.sendEvent(new StoppedEvent('breakpoint', DebugSession.THREAD_ID));
+            this.breakingParams.filePath = filePath
+            this.breakingParams.line = parseInt(line)
+            this.breakingParams.column = parseInt(column)
+            this.runtime.emit("output", JSON.stringify(this.breakingParams))
+            this.sendEvent(new BreakpointEvent('changed', new Breakpoint(true, line, undefined, this.createSource(filePath))));
+        });
         this.runtime.on('output', (text, filePath, line, column) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
             if (filePath !== undefined) {
@@ -56,25 +65,15 @@ export class DebugSession extends LoggingDebugSession {
     }
 
     protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
-        // const path = <string>args.source.path;
-        // const clientLines = args.lines || [];
-
-        // clear all breakpoints for this file
-        // this._runtime.clearBreakpoints(path);
-
-        // set and verify breakpoint locations
-        // const actualBreakpoints = clientLines.map(l => {
-        //     let { verified, line, id } = this._runtime.setBreakPoint(path, this.convertClientLineToDebugger(l));
-        //     const bp = <DebugProtocol.Breakpoint>new Breakpoint(verified, this.convertDebuggerLineToClient(line));
-        //     bp.id = id;
-        //     return bp;
-        // });
-
-        // // send back the actual breakpoint positions
-        // response.body = {
-        //     breakpoints: actualBreakpoints
-        // };
-        // this.sendResponse(response);
+        const path = (<string>args.source.path).replace(this.runtime.cwd + "/", "");
+        const clientLines = args.lines || [];
+        this.runtime.emit("output", path)
+        this.runtime.emit("output", JSON.stringify(clientLines))
+        this.runtime.removeBreakpointsWithPrefix(path.trim())
+        this.runtime.setBreakpoints(clientLines.map(line => {
+            return path + ":" + this.convertClientLineToDebugger(line)
+        }))
+        this.sendResponse(response);
     }
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
@@ -87,18 +86,13 @@ export class DebugSession extends LoggingDebugSession {
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-
-        // const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
-        // const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
-        // const endFrame = startFrame + maxLevels;
-
-        // const stk = this._runtime.stack(startFrame, endFrame);
-
-        // response.body = {
-        //     stackFrames: stk.frames.map(f => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
-        //     totalFrames: stk.count
-        // };
-        // this.sendResponse(response);
+        if (this.breakingParams.filePath !== undefined && this.breakingParams.line !== undefined) {
+            response.body = {
+                stackFrames: [new StackFrame(0, "breakpoint", this.createSource(this.breakingParams.filePath), this.breakingParams.line)],
+                totalFrames: 1
+            };
+        }
+        this.sendResponse(response);
     }
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
@@ -111,7 +105,7 @@ export class DebugSession extends LoggingDebugSession {
         // response.body = {
         //     scopes: scopes
         // };
-        // this.sendResponse(response);
+        this.sendResponse(response);
     }
 
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
@@ -152,28 +146,18 @@ export class DebugSession extends LoggingDebugSession {
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-        // this._runtime.continue();
-        this.sendResponse(response);
-    }
-
-    protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-        // this._runtime.continue(true);
+        this.runtime.handleContinue()
         this.sendResponse(response);
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        // this._runtime.step();
-        this.sendResponse(response);
-    }
-
-    protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-        // this._runtime.step(true);
+        this.runtime.handleNext()
         this.sendResponse(response);
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
-
-
+        this.runtime.handleRepl(args.expression)
+        this.sendResponse(response)
     }
 
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
