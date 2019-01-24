@@ -11,14 +11,24 @@
 	],
 	"activationEvents": [
 		"onDebug",
-		"onCommand:extension.helloWorld"
+		"onCommand:xt.newProject",
+		"onCommand:xt.newProject.fromSource",
+		"onCommand:xt.installProject"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "Hello World"
+				"command": "xt.newProject",
+				"title": "XT: New Project"
+			},
+			{
+				"command": "xt.newProject.fromSource",
+				"title": "XT: New Project (Source Code)"
+			},
+			{
+				"command": "xt.installProject",
+				"title": "XT: Install Project"
 			}
 		],
 		"breakpoints": [

@@ -114,7 +114,6 @@ export class DebugRuntime extends EventEmitter {
             const fileName = components[1].split(":")[0]
             const lineNum = components[1].split(":")[1]
             if (fileName && fileName.trim() === "REPL") {
-                this.emit("output", components[0])
                 return true
             }
             this.emit("output", components[0], fileName ? fileName.trim() : undefined, lineNum ? lineNum.trim() : undefined)
