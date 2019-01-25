@@ -13,7 +13,8 @@
 		"onDebug",
 		"onCommand:xt.newProject",
 		"onCommand:xt.newProject.fromSource",
-		"onCommand:xt.installProject"
+		"onCommand:xt.installProject",
+		"onCommand:xt.showQRCode"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -29,6 +30,10 @@
 			{
 				"command": "xt.installProject",
 				"title": "XT: Install Project"
+			},
+			{
+				"command": "xt.showQRCode",
+				"title": "XT: Show QR Code"
 			}
 		],
 		"breakpoints": [
@@ -89,6 +94,16 @@
 							"request": "launch",
 							"name": "Debug XT on Chrome",
 							"platform": "chrome",
+							"workspace": "^\"\\${workspaceFolder}\""
+						}
+					},
+					{
+						"label": "XT: Debug via QRCode",
+						"body": {
+							"type": "xt",
+							"request": "launch",
+							"name": "Debug XT via QRCode",
+							"platform": "qrcode",
 							"workspace": "^\"\\${workspaceFolder}\""
 						}
 					},

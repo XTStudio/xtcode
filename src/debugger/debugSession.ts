@@ -1,9 +1,8 @@
 import {
-    // Logger, logger,
     LoggingDebugSession,
     InitializedEvent, OutputEvent, StoppedEvent, BreakpointEvent,
     Thread, Source, TerminatedEvent, Breakpoint,
-    StackFrame, Scope, Handles,
+    StackFrame, Scope, Handles, ContinuedEvent,
 } from 'vscode-debugadapter';
 import { DebugRuntime } from './debugRuntime';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -27,10 +26,13 @@ export class DebugSession extends LoggingDebugSession {
             this.breakingParams.filePath = filePath
             this.breakingParams.line = parseInt(line)
             this.breakingParams.column = parseInt(column)
+            this.breakingVariables = {}
+            this.variableHandles = new Handles<string>();
             this.sendEvent(new BreakpointEvent('changed', new Breakpoint(true, line, undefined, this.createSource(filePath))));
         });
         this.runtime.on('variables', (variables) => {
             this.breakingVariables = variables || {}
+            this.variableHandles = new Handles<string>();
         });
         this.runtime.on('output', (text, filePath, line, column) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
@@ -45,6 +47,9 @@ export class DebugSession extends LoggingDebugSession {
             }
             this.sendEvent(e);
         });
+        this.runtime.on('qrcode', (url) => {
+            this.sendEvent({ event: "xt.activeQRCode", body: { url }, seq: 0, type: "message" })
+        })
         this.runtime.on('end', () => {
             this.sendEvent(new TerminatedEvent());
         })
@@ -167,6 +172,9 @@ export class DebugSession extends LoggingDebugSession {
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         this.runtime.handleRepl(args.expression)
         this.sendResponse(response)
+        if (args.expression === "c") {
+            this.sendEvent(new ContinuedEvent(DebugSession.THREAD_ID))
+        }
     }
 
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {

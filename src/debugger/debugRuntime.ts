@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { existsSync } from "fs";
+import { QRCodeViewer } from "./QRViewer/qrcodeViewer";
 
 const child_process = require("child_process")
 
@@ -34,6 +35,9 @@ export class DebugRuntime extends EventEmitter {
         else if (this.platform === "chrome") {
             this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run chrome`, { cwd: this.cwd })
         }
+        else if (this.platform === "qrcode") {
+            this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run qrcode`, { cwd: this.cwd })
+        }
         else {
             throw Error("platform should be 'ios', 'android', 'chrome'.")
         }
@@ -41,6 +45,7 @@ export class DebugRuntime extends EventEmitter {
             this.exec.stdout.on("data", (data: any) => {
                 const values: string = data.toString()
                 values.split("\n").forEach(it => {
+                    if (this.handleQRCode(it)) { return }
                     if (this.handleBreak(it)) { return }
                     if (this.handleLog(it)) { return }
                     this.emit("output", it)
@@ -128,6 +133,14 @@ export class DebugRuntime extends EventEmitter {
                 this.emit("output", components[0], fileName ? fileName.trim() : undefined, lineNum ? lineNum.trim() : undefined)
                 return true
             }
+        }
+        return false
+    }
+
+    handleQRCode(data: any): boolean {
+        if (typeof data === "string" && data.indexOf("====== QRCode Content >>>") >= 0) {
+            this.emit("qrcode", data.replace("====== QRCode Content >>>", "").trim())
+            return true
         }
         return false
     }
