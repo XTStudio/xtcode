@@ -3,8 +3,7 @@ import {
     LoggingDebugSession,
     InitializedEvent, OutputEvent, StoppedEvent, BreakpointEvent,
     Thread, Source, TerminatedEvent, Breakpoint,
-    StackFrame,
-    // , Scope,  Handles, 
+    StackFrame, Scope, Handles,
 } from 'vscode-debugadapter';
 import { DebugRuntime } from './debugRuntime';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -14,6 +13,8 @@ export class DebugSession extends LoggingDebugSession {
 
     private runtime = new DebugRuntime
     private breakingParams: { filePath?: string, line?: number, column?: number } = {}
+    private breakingVariables: any = {}
+    private variableHandles = new Handles<string>();
 
     private static THREAD_ID = 1;
 
@@ -26,8 +27,10 @@ export class DebugSession extends LoggingDebugSession {
             this.breakingParams.filePath = filePath
             this.breakingParams.line = parseInt(line)
             this.breakingParams.column = parseInt(column)
-            this.runtime.emit("output", JSON.stringify(this.breakingParams))
             this.sendEvent(new BreakpointEvent('changed', new Breakpoint(true, line, undefined, this.createSource(filePath))));
+        });
+        this.runtime.on('variables', (variables) => {
+            this.breakingVariables = variables || {}
         });
         this.runtime.on('output', (text, filePath, line, column) => {
             const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`);
@@ -67,8 +70,6 @@ export class DebugSession extends LoggingDebugSession {
     protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
         const path = (<string>args.source.path).replace(this.runtime.cwd + "/", "");
         const clientLines = args.lines || [];
-        this.runtime.emit("output", path)
-        this.runtime.emit("output", JSON.stringify(clientLines))
         this.runtime.removeBreakpointsWithPrefix(path.trim())
         this.runtime.setBreakpoints(clientLines.map(line => {
             return path + ":" + this.convertClientLineToDebugger(line)
@@ -96,53 +97,61 @@ export class DebugSession extends LoggingDebugSession {
     }
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-
-        // const frameReference = args.frameId;
-        // const scopes = new Array<Scope>();
-        // scopes.push(new Scope("Local", this._variableHandles.create("local_" + frameReference), false));
-        // scopes.push(new Scope("Global", this._variableHandles.create("global_" + frameReference), true));
-
-        // response.body = {
-        //     scopes: scopes
-        // };
+        const scopes = new Array<Scope>();
+        scopes.push(new Scope("Local", this.variableHandles.create("$$local"), false));
+        response.body = {
+            scopes: scopes
+        };
         this.sendResponse(response);
     }
 
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
-
-        // const variables = new Array<DebugProtocol.Variable>();
-        // const id = this._variableHandles.get(args.variablesReference);
-        // if (id !== null) {
-        //     variables.push({
-        //         name: id + "_i",
-        //         type: "integer",
-        //         value: "123",
-        //         variablesReference: 0
-        //     });
-        //     variables.push({
-        //         name: id + "_f",
-        //         type: "float",
-        //         value: "3.14",
-        //         variablesReference: 0
-        //     });
-        //     variables.push({
-        //         name: id + "_s",
-        //         type: "string",
-        //         value: "hello world",
-        //         variablesReference: 0
-        //     });
-        //     variables.push({
-        //         name: id + "_o",
-        //         type: "object",
-        //         value: "Object",
-        //         variablesReference: this._variableHandles.create("object_")
-        //     });
-        // }
-
-        // response.body = {
-        //     variables: variables
-        // };
-        // this.sendResponse(response);
+        const variables = new Array<DebugProtocol.Variable>();
+        const id = this.variableHandles.get(args.variablesReference);
+        if (id !== null) {
+            const targetData = eval("this.breakingVariables" + id.replace("$$local", ""))
+            for (const vKey in targetData) {
+                if (targetData.hasOwnProperty(vKey)) {
+                    const value = targetData[vKey];
+                    if (typeof value === "string") {
+                        variables.push({
+                            name: vKey,
+                            type: "string",
+                            value: value,
+                            variablesReference: 0
+                        })
+                    }
+                    else if (typeof value === "number") {
+                        variables.push({
+                            name: vKey,
+                            type: Number.isInteger(value) ? "integer" : "float",
+                            value: value.toString(),
+                            variablesReference: 0
+                        })
+                    }
+                    else if (typeof value === "boolean") {
+                        variables.push({
+                            name: vKey,
+                            type: "boolean",
+                            value: value ? "true" : "false",
+                            variablesReference: 0
+                        })
+                    }
+                    else if (typeof value === "object") {
+                        variables.push({
+                            name: vKey,
+                            type: "object",
+                            value: "Object",
+                            variablesReference: this.variableHandles.create(`${id}.${vKey}`)
+                        })
+                    }
+                }
+            }
+        }
+        response.body = {
+            variables: variables
+        };
+        this.sendResponse(response);
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {

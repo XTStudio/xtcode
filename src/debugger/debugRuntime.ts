@@ -97,6 +97,13 @@ export class DebugRuntime extends EventEmitter {
         if (typeof data === "string" && data.indexOf("[Tiny-Debugger] Enter 'c' to continue.") >= 0) {
             return true
         }
+        if (typeof data === "string" && data.indexOf("[Tiny-Debugger] Break variables ") >= 0) {
+            const encodedData = data.replace("[Tiny-Debugger] Break variables ", "").trim()
+            try {
+                this.emit("variables", JSON.parse(new Buffer(encodedData, "base64").toString()))
+            } catch (error) { }
+            return true
+        }
         if (typeof data === "string" && data.indexOf("[Tiny-Debugger] Break on ") >= 0) {
             const bpFile = data.replace("[Tiny-Debugger] Break on ", "").trim()
             const fileName = bpFile.split(":")[0]
@@ -114,10 +121,13 @@ export class DebugRuntime extends EventEmitter {
             const fileName = components[1].split(":")[0]
             const lineNum = components[1].split(":")[1]
             if (fileName && fileName.trim() === "REPL") {
+                this.emit("output", components[0], "REPL", "0")
                 return true
             }
-            this.emit("output", components[0], fileName ? fileName.trim() : undefined, lineNum ? lineNum.trim() : undefined)
-            return true
+            else {
+                this.emit("output", components[0], fileName ? fileName.trim() : undefined, lineNum ? lineNum.trim() : undefined)
+                return true
+            }
         }
         return false
     }
