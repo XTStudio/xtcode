@@ -118,6 +118,16 @@
 						}
 					},
 					{
+						"label": "XT: Debug on iPhone",
+						"body": {
+							"type": "xt",
+							"request": "launch",
+							"name": "Debug XT on iPhone",
+							"platform": "iphone",
+							"workspace": "^\"\\${workspaceFolder}\""
+						}
+					},
+					{
 						"label": "XT: Debug on Android Emulator",
 						"body": {
 							"type": "xt",

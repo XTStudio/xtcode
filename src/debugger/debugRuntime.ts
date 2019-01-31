@@ -29,6 +29,9 @@ export class DebugRuntime extends EventEmitter {
         if (this.platform === "ios") {
             this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run ios${this.device ? ` --device "${this.device}"` : ""}${this.os ? " --os " + this.os : ""}`, { cwd: this.cwd })
         }
+        else if (this.platform === "iphone") {
+            this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run ios --platform "iPhone"`, { cwd: this.cwd })
+        }
         else if (this.platform === "android") {
             this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run android`, { cwd: this.cwd })
         }
@@ -39,7 +42,7 @@ export class DebugRuntime extends EventEmitter {
             this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run qrcode`, { cwd: this.cwd })
         }
         else {
-            throw Error("platform should be 'ios', 'android', 'chrome'.")
+            throw Error("platform should be 'ios', 'iphone', 'android', 'chrome', 'qrcode'.")
         }
         if (this.exec) {
             this.exec.stdout.on("data", (data: any) => {
