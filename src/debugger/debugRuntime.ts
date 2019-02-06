@@ -20,7 +20,12 @@ export class DebugRuntime extends EventEmitter {
     stop() {
         if (this.exec) {
             try {
-                require('child_process').execSync(`kill $(lsof -t -i:8090)`)
+                if (this.platform === "chrome") {
+                    require('child_process').execSync(`lsof -n -i4TCP:8090 | grep -E "(LISTEN|Google)" | awk '{ print $2 }' | xargs kill`)
+                }
+                else {
+                    require('child_process').execSync(`lsof -n -i4TCP:8090 | grep LISTEN | awk '{ print $2 }' | xargs kill`)
+                }
             } catch (error) { }
         }
     }
@@ -45,6 +50,7 @@ export class DebugRuntime extends EventEmitter {
             throw Error("platform should be 'ios', 'iphone', 'android', 'chrome', 'qrcode'.")
         }
         if (this.exec) {
+            this.emit("start")
             this.exec.stdout.on("data", (data: any) => {
                 const values: string = data.toString()
                 values.split("\n").forEach(it => {

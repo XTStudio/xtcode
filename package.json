@@ -14,7 +14,8 @@
 		"onCommand:xt.newProject",
 		"onCommand:xt.newProject.fromSource",
 		"onCommand:xt.installProject",
-		"onCommand:xt.showQRCode"
+		"onCommand:xt.showQRCode",
+		"onCommand:xt.showNetworkInspector"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -34,6 +35,18 @@
 			{
 				"command": "xt.showQRCode",
 				"title": "XT: Show QR Code"
+			},
+			{
+				"command": "xt.showNetworkInspector",
+				"title": "XT: Show Network Inspector"
+			},
+			{
+				"command": "xt.showNetworkInspector.onRightSide",
+				"title": "XT: Show Network Inspector (Right-Side)"
+			},
+			{
+				"command": "xt.askDeveloperTools",
+				"title": "XT: Open Developer Tools"
 			}
 		],
 		"breakpoints": [

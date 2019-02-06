@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { DebugSession } from '../debugSession';
 
 export class QRCodeViewer {
 

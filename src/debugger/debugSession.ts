@@ -50,6 +50,9 @@ export class DebugSession extends LoggingDebugSession {
         this.runtime.on('qrcode', (url) => {
             this.sendEvent({ event: "xt.activeQRCode", body: { url }, seq: 0, type: "message" })
         })
+        this.runtime.on('start', () => {
+            this.sendEvent({ event: "xt.activeDeveloperTools", body: {}, seq: 0, type: "message" })
+        })
         this.runtime.on('end', () => {
             this.sendEvent(new TerminatedEvent());
         })
