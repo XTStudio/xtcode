@@ -46,6 +46,9 @@ export class DebugRuntime extends EventEmitter {
         else if (this.platform === "qrcode") {
             this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run qrcode`, { cwd: this.cwd })
         }
+        else if (this.platform === "wx") {
+            this.exec = child_process.exec(`node ./node_modules/.bin/xt debug run wx`, { cwd: this.cwd })
+        }
         else {
             throw Error("platform should be 'ios', 'iphone', 'android', 'chrome', 'qrcode'.")
         }

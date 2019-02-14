@@ -151,6 +151,16 @@
 						}
 					},
 					{
+						"label": "XT: Debug on 微信小程序",
+						"body": {
+							"type": "xt",
+							"request": "launch",
+							"name": "Debug XT on 微信小程序",
+							"platform": "wx",
+							"workspace": "^\"\\${workspaceFolder}\""
+						}
+					},
+					{
 						"label": "XT: Debug on Android Emulator",
 						"body": {
 							"type": "xt",
