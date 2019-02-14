@@ -15,7 +15,9 @@
 		"onCommand:xt.newProject.fromSource",
 		"onCommand:xt.installProject",
 		"onCommand:xt.showQRCode",
-		"onCommand:xt.showNetworkInspector"
+		"onCommand:xt.showNetworkInspector",
+		"onCommand:xt.showUserDefaultsInspector",
+		"onCommand:xt.showUserDefaultsInspector.onRightSide"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -43,6 +45,14 @@
 			{
 				"command": "xt.showNetworkInspector.onRightSide",
 				"title": "XT: Show Network Inspector (Right-Side)"
+			},
+			{
+				"command": "xt.showUserDefaultsInspector",
+				"title": "XT: Show User Defaults Inspector"
+			},
+			{
+				"command": "xt.showUserDefaultsInspector.onRightSide",
+				"title": "XT: Show User Defaults Inspector (Right-Side)"
 			},
 			{
 				"command": "xt.askDeveloperTools",

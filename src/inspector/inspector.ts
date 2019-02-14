@@ -22,13 +22,21 @@ export class Inspector {
     ask() {
         vscode.window.showQuickPick([
             "XT: Open Network Inspector",
-            "XT: Open Network Inspector (Right-Side)"
+            "XT: Open Network Inspector (Right-Side)",
+            "XT: Open User Defaults Inspector",
+            "XT: Open User Defaults (Right-Side)"
         ]).then((value) => {
             if (value === "XT: Open Network Inspector") {
                 vscode.commands.executeCommand("xt.showNetworkInspector")
             }
             else if (value === "XT: Open Network Inspector (Right-Side)") {
                 vscode.commands.executeCommand("xt.showNetworkInspector.onRightSide")
+            }
+            else if (value === "XT: Open User Defaults Inspector") {
+                vscode.commands.executeCommand("xt.showUserDefaultsInspector")
+            }
+            else if (value === "XT: Open User Defaults (Right-Side)") {
+                vscode.commands.executeCommand("xt.showUserDefaultsInspector.onRightSide")
             }
         })
     }

@@ -5,6 +5,7 @@ import { InstallProject } from './commands/installProject';
 import { QRCodeViewer } from './debugger/QRViewer/qrcodeViewer';
 import { NetworkInspector } from './inspector/networkInspector';
 import { Inspector } from './inspector/inspector';
+import { UserDefaultsInspector } from './inspector/userDefaultsInspector';
 
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('xt.newProject', () => {
@@ -25,11 +26,16 @@ export function activate(context: vscode.ExtensionContext) {
 		Inspector.shared.ask()
 	}))
 	context.subscriptions.push(vscode.commands.registerCommand('xt.showNetworkInspector', () => {
-		console.log("123456789")
 		new NetworkInspector().run(context)
 	}))
 	context.subscriptions.push(vscode.commands.registerCommand('xt.showNetworkInspector.onRightSide', () => {
 		new NetworkInspector().run(context, true)
+	}))
+	context.subscriptions.push(vscode.commands.registerCommand('xt.showUserDefaultsInspector', () => {
+		new UserDefaultsInspector().run(context)
+	}))
+	context.subscriptions.push(vscode.commands.registerCommand('xt.showUserDefaultsInspector.onRightSide', () => {
+		new UserDefaultsInspector().run(context, true)
 	}))
 	const provider = new DebugConfigurationProvider()
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xt', provider))
